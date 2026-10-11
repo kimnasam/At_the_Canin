@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -16,7 +17,12 @@ public class MainSceneAudio : MonoBehaviour
     [SerializeField] private AudioClip backgroundMusic; // 반복 재생할 배경 음악입니다.
     [SerializeField] private AudioClip rainLoopSound; // 반복 재생할 빗소리입니다.
 
+    [Header("페이드 인")]
+    [SerializeField, Min(0.01f)] private float fadeInDuration = 2f; // 장면 시작 후 음악과 빗소리가 원래 음량까지 커지는 시간입니다.
+
     private bool settingsAreValid; // 모든 오디오가 연결되었는지 나타냅니다.
+    private float musicTargetVolume; // 페이드 인이 끝났을 때 배경 음악에 적용할 음량입니다.
+    private float rainTargetVolume; // 페이드 인이 끝났을 때 빗소리에 적용할 음량입니다.
 
     /// <summary>
     /// 오디오 소스를 코드 재생에 맞게 초기화합니다.
@@ -37,6 +43,8 @@ public class MainSceneAudio : MonoBehaviour
         musicAudioSource.Stop();
         rainAudioSource.playOnAwake = false;
         rainAudioSource.Stop();
+        musicTargetVolume = musicAudioSource.volume;
+        rainTargetVolume = rainAudioSource.volume;
     }
 
     /// <summary>
@@ -51,10 +59,33 @@ public class MainSceneAudio : MonoBehaviour
 
         musicAudioSource.clip = backgroundMusic;
         musicAudioSource.loop = true;
+        musicAudioSource.volume = 0f;
         musicAudioSource.Play();
         rainAudioSource.clip = rainLoopSound;
         rainAudioSource.loop = true;
+        rainAudioSource.volume = 0f;
         rainAudioSource.Play();
+        StartCoroutine(FadeInSceneAudio());
+    }
+
+    /// <summary>
+    /// 배경 음악과 빗소리를 0에서 각 AudioSource의 설정 음량까지 서서히 높입니다.
+    /// </summary>
+    private IEnumerator FadeInSceneAudio()
+    {
+        float elapsedTime = 0f; // 현재까지 진행된 페이드 인 시간입니다.
+
+        while (elapsedTime < fadeInDuration)
+        {
+            elapsedTime += Time.unscaledDeltaTime;
+            float fadeRatio = Mathf.Clamp01(elapsedTime / fadeInDuration); // 현재 페이드 인의 0~1 진행 비율입니다.
+            musicAudioSource.volume = Mathf.Lerp(0f, musicTargetVolume, fadeRatio);
+            rainAudioSource.volume = Mathf.Lerp(0f, rainTargetVolume, fadeRatio);
+            yield return null;
+        }
+
+        musicAudioSource.volume = musicTargetVolume;
+        rainAudioSource.volume = rainTargetVolume;
     }
 
     /// <summary>
