@@ -51,15 +51,22 @@ public class NightWindowDefenseController : MonoBehaviour
     /// <summary>
     /// 밤이고 늑대를 체크인시키지 않은 경우에만 2분 방어 이벤트를 시작합니다.
     /// </summary>
-    private void Start()
+    private IEnumerator Start()
     {
         SetTimerVisible(false);
+
+        // StageOpeningSequence가 첫 밤 설명을 끝내기 전에는 타이머와 공격을 시작하지 않습니다.
+        yield return null;
+        while (GameplayDialogueLock.IsLocked)
+        {
+            yield return null;
+        }
 
         if (GameTimeManager.Instance == null)
         {
             Debug.LogError("씬에 GameTimeManager가 필요합니다.", this);
             enabled = false;
-            return;
+            yield break;
         }
 
         bool isNight = GameTimeManager.Instance.CurrentTime == GameTimeManager.TimePeriod.Night; // 현재 시간이 밤인지 확인한 결과입니다.
@@ -68,13 +75,13 @@ public class NightWindowDefenseController : MonoBehaviour
         if (!isNight || wolfWasCheckedIn)
         {
             enabled = false;
-            return;
+            yield break;
         }
 
         if (!AreSettingsValid())
         {
             enabled = false;
-            return;
+            yield break;
         }
 
         ClearAllWindows();

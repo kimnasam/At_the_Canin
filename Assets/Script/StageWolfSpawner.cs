@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -12,12 +13,19 @@ public class StageWolfSpawner : MonoBehaviour
     private readonly Vector3 wolfSpawnPosition = new Vector3(-7.5f, 4.5f, 0f); // 늑대가 나타날 고정 월드 좌표입니다.
     private bool hasSpawnedWolf; // 같은 스포너가 늑대를 두 번 생성하지 않도록 기록하는 값입니다.
 
-    private void Start()
+    private IEnumerator Start()
     {
+        // 첫 밤 설명이 끝나기 전에 추격 늑대가 생성되지 않도록 기다립니다.
+        yield return null;
+        while (GameplayDialogueLock.IsLocked)
+        {
+            yield return null;
+        }
+
         if (GameTimeManager.Instance == null)
         {
             Debug.LogError("씬에 GameTimeManager가 필요합니다.", this);
-            return;
+            yield break;
         }
 
         GameTimeManager.Instance.TimeChanged += HandleTimeChanged;

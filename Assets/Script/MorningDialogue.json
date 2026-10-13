@@ -1,0 +1,29 @@
+{
+  "lines": [
+    {
+      "text": "하...",
+      "voice": "Player",
+      "soundCue": ""
+    },
+    {
+      "text": "이 지긋지긋한 곳을 다시 오게 될줄이야...",
+      "voice": "Player",
+      "soundCue": ""
+    },
+    {
+      "text": "일단 얼추 방들을 확인하고",
+      "voice": "Player",
+      "soundCue": ""
+    },
+    {
+      "text": "후딱 카운터에서 일을 끝내야겠다.",
+      "voice": "Player",
+      "soundCue": ""
+    },
+    {
+      "text": "(WASD, 방향키로 조작이 가능합니다.)",
+      "voice": "Player",
+      "soundCue": ""
+    }
+  ]
+}

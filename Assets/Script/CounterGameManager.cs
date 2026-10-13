@@ -12,6 +12,7 @@ public class CounterGameManager : MonoBehaviour
     [SerializeField] private TypewriterDialogue dialogueView; // 말풍선 대사를 출력하는 코드입니다.
     [SerializeField] private CounterDecisionUI decisionUI; // 두 선택 버튼과 정원을 표시하는 코드입니다.
     [SerializeField] private SceneFadeController fadeController; // 업무 완료 뒤 Stage 씬으로 이동시키는 코드입니다.
+    [SerializeField] private JsonTutorialDialogue counterIntroDialogue; // 첫 카운터 입장 설명을 끝낸 뒤 방문객 진행을 허용하는 코드입니다.
 
     [Header("씬 설정")]
     [SerializeField] private string stageSceneName = "Stage"; // 밤이 되었을 때 돌아갈 스테이지 씬 이름입니다.
@@ -20,19 +21,31 @@ public class CounterGameManager : MonoBehaviour
     private CounterVisitorGenerator.VisitorData currentVisitor; // 현재 플레이어가 판별 중인 방문객입니다.
     private bool canChoose; // 대사가 끝나 선택 버튼을 누를 수 있는 상태인지 나타냅니다.
 
-    private void Start()
+    private IEnumerator Start()
     {
         if (GameTimeManager.Instance == null)
         {
             Debug.LogError("씬에 GameTimeManager가 필요합니다.", this);
             enabled = false;
-            return;
+            yield break;
         }
 
         GameTimeManager.Instance.BeginMorning();
+        if (counterIntroDialogue != null)
+        {
+            counterIntroDialogue.ReserveIfNeeded();
+        }
+
         decisionUI.Initialize(CheckInCurrentVisitor, SendAwayCurrentVisitor);
         decisionUI.UpdateCapacity(0, GameTimeManager.Instance.MaximumGuests);
-        StartCoroutine(ShowNextVisitor());
+        decisionUI.SetButtonsVisible(false);
+
+        if (counterIntroDialogue != null)
+        {
+            yield return counterIntroDialogue.PlayIfNeeded();
+        }
+
+        yield return ShowNextVisitor();
     }
 
     public void CheckInCurrentVisitor()

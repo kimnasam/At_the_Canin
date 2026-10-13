@@ -25,6 +25,9 @@ public class GameTimeManager : MonoBehaviour
     public int CheckedInGuests { get; private set; } // 오늘 체크인시킨 손님의 수입니다.
     public bool WolfEntered { get; private set; } // 오늘 늑대를 한 마리라도 들였는지 나타냅니다.
     public int MaximumGuests => maximumGuests; // 하루 최대 정원입니다.
+    public bool MorningDialoguePlayed { get; private set; } // 이번 새 게임에서 아침 설명을 이미 완료했는지 나타냅니다.
+    public bool CounterDialoguePlayed { get; private set; } // 이번 새 게임에서 카운터 설명을 이미 완료했는지 나타냅니다.
+    public bool NightDialoguePlayed { get; private set; } // 이번 새 게임에서 첫 밤 설명을 이미 완료했는지 나타냅니다.
 
     private void Awake()
     {
@@ -35,10 +38,19 @@ public class GameTimeManager : MonoBehaviour
         }
 
         Instance = this;
+
+        // DontDestroyOnLoad only preserves root GameObjects. The Stage hierarchy can
+        // group manager objects under a container, so detach this manager first.
+        if (transform.parent != null)
+        {
+            transform.SetParent(null, true);
+        }
+
         DontDestroyOnLoad(gameObject);
 
         if (newGameRequested)
         {
+            ResetDialogueProgress();
             BeginMorning();
             newGameRequested = false;
         }
@@ -52,6 +64,7 @@ public class GameTimeManager : MonoBehaviour
     {
         if (Instance != null)
         {
+            Instance.ResetDialogueProgress();
             Instance.BeginMorning();
             newGameRequested = false;
             return;
@@ -85,6 +98,35 @@ public class GameTimeManager : MonoBehaviour
     public void BeginNight()
     {
         SetTime(TimePeriod.Night);
+    }
+
+    /// <summary>
+    /// 완료된 상황의 설명 대화를 이번 새 게임에서 다시 실행하지 않도록 기록합니다.
+    /// </summary>
+    public void MarkDialoguePlayed(JsonTutorialDialogue.DialogueMoment dialogueMoment)
+    {
+        switch (dialogueMoment)
+        {
+            case JsonTutorialDialogue.DialogueMoment.Morning:
+                MorningDialoguePlayed = true;
+                break;
+            case JsonTutorialDialogue.DialogueMoment.Counter:
+                CounterDialoguePlayed = true;
+                break;
+            case JsonTutorialDialogue.DialogueMoment.Night:
+                NightDialoguePlayed = true;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Main에서 새 게임을 시작할 때 세 설명 대화의 완료 기록을 초기화합니다.
+    /// </summary>
+    private void ResetDialogueProgress()
+    {
+        MorningDialoguePlayed = false;
+        CounterDialoguePlayed = false;
+        NightDialoguePlayed = false;
     }
 
     private void SetTime(TimePeriod newTime)

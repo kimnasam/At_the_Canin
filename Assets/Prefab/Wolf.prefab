@@ -112,6 +112,7 @@ MonoBehaviour:
   pathRefreshInterval: 0.25
   pathWallClearance: 0.18
   maximumSearchNodes: 6000
+  currentRoom: "\uAC70\uC2E4"
 --- !u!95 &6717188814814428950
 Animator:
   serializedVersion: 5

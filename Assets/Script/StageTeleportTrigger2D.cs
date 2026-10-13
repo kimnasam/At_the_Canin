@@ -17,8 +17,14 @@ public class StageTeleportTrigger2D : MonoBehaviour
     [SerializeField] private EntryDirection requiredDirection = EntryDirection.Up; // 작동 방향이며 동일 방향 WASD도 지원합니다.
     [SerializeField] private Vector2 destinationPosition; // 도착할 월드 X/Y 좌표입니다.
     [SerializeField] private string destinationRoom = "복도"; // CameraFollow 목록과 일치하는 도착 방 이름입니다.
+
+    [Header("순간이동 효과음")]
+    [SerializeField] private AudioClip teleportSound; // 플레이어 순간이동이 성공했을 때 재생할 효과음입니다.
+    [SerializeField, Range(0f, 1f)] private float teleportSoundVolume = 1f; // 순간이동 효과음의 볼륨입니다.
+
     private Collider2D triggerArea; // 플레이어와 겹치는지 확인할 Trigger 영역입니다.
     private Collider2D[] playerColliders; // 자식 오브젝트까지 포함한 플레이어 콜라이더입니다.
+    private AudioSource teleportAudioSource; // 순간이동 효과음을 재생하는 AudioSource입니다.
 
     private bool hasTeleportedDuringOverlap; // 같은 영역에 머무는 동안 순간이동이 반복되지 않게 합니다.
 
@@ -45,10 +51,48 @@ public class StageTeleportTrigger2D : MonoBehaviour
         return CanWolfTravel && wolfCollider != null && wolfCollider.enabled
             && GetComponent<Collider2D>().Distance(wolfCollider).isOverlapped;
     }
+
+    /// <summary>
+    /// 늑대가 출입구와 겹쳤거나 지정 거리 안까지 접근했는지 검사합니다.
+    /// 출입구 Trigger가 벽 안쪽에 걸쳐 있어도 문 앞에서 멈추지 않게 합니다.
+    /// </summary>
+    public bool CanWolfEnter(Collider2D wolfCollider, float maximumDistance)
+    {
+        if (!CanWolfTravel || wolfCollider == null || !wolfCollider.enabled)
+        {
+            return false;
+        }
+
+        ColliderDistance2D distance = triggerArea.Distance(wolfCollider);
+        return distance.isOverlapped || distance.distance <= Mathf.Max(0f, maximumDistance);
+    }
+
+    /// <summary>경로 탐색 지점이 출입구 Trigger에 충분히 가까운지 검사합니다.</summary>
+    public bool IsWolfApproachPosition(Vector2 worldPosition, float maximumDistance)
+    {
+        if (!CanWolfTravel)
+        {
+            return false;
+        }
+
+        Vector2 closestPoint = triggerArea.ClosestPoint(worldPosition);
+        float allowedDistance = Mathf.Max(0f, maximumDistance);
+        return (closestPoint - worldPosition).sqrMagnitude <= allowedDistance * allowedDistance;
+    }
+
     private void Awake()
     {
         triggerArea = GetComponent<Collider2D>();
         triggerArea.isTrigger = true;
+        teleportAudioSource = GetComponent<AudioSource>();
+        if (teleportAudioSource == null)
+        {
+            teleportAudioSource = gameObject.AddComponent<AudioSource>();
+        }
+        teleportAudioSource.playOnAwake = false;
+        teleportAudioSource.loop = false;
+        teleportAudioSource.spatialBlend = 0f;
+
         if (player == null) player = FindObjectOfType<PlayerGridMovement>();
         if (player != null) playerColliders = player.GetComponentsInChildren<Collider2D>(true);
         if (string.IsNullOrWhiteSpace(destinationRoom))
@@ -83,7 +127,14 @@ public class StageTeleportTrigger2D : MonoBehaviour
         }
 
         if (!hasTeleportedDuringOverlap && Time.timeScale > 0f && IsDirectionHeld())
+        {
             hasTeleportedDuringOverlap = player.TryTeleport(destinationPosition, destinationRoom);
+
+            if (hasTeleportedDuringOverlap && teleportSound != null)
+            {
+                teleportAudioSource.PlayOneShot(teleportSound, teleportSoundVolume);
+            }
+        }
     }
 
     private void OnDisable()

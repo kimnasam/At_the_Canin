@@ -1,0 +1,89 @@
+{
+  "lines": [
+    {
+      "text": "일단 빨리 손님을 받고...",
+      "voice": "Player",
+      "soundCue": ""
+    },
+    {
+      "text": "",
+      "voice": "News",
+      "soundCue": "EAS System"
+    },
+    {
+      "text": "이 방송은 당국에서 안내하는 방송입니다.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "현재 서쪽 숲에 미확인 개체가 돌아다니는 것을 확인 하였습니다.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "개체는 공격성을 띄는것으로 포착되며 현재까지 추산된 피해자는 총 12명 입니다.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "이에 당국은 행동 요령을 발표합니다.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "개체는 사냥한 사람의 피부를 통하여 사람 흉내를 낼수 있습니다.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "외적으로 수상한 부분이 있거나 일반 사람의 목소리가 아닌 경우",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "집에 들이지 마시기 바랍니다.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "개체는 빛을 무서워 하는것으로 포착되었습니다.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "어두운 곳에서 갑자기 밝아지는 경우 개체는 도주합니다.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "또한 개체는 유리창처럼 깨기 쉬운곳을 통해 집에 들어가려고 합니다.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "유리창에 개체가 포착될 경우 밝은 빛으로 내쫒으십시요.",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "이상으로 방송을 종료합니다",
+      "voice": "News",
+      "soundCue": ""
+    },
+    {
+      "text": "...",
+      "voice": "Player",
+      "soundCue": ""
+    },
+    {
+      "text": "이게 무슨소리야...?",
+      "voice": "Player",
+      "soundCue": ""
+    },
+    {
+      "text": "일단... 일이나 하자고... 별일이나 있겠어?",
+      "voice": "Player",
+      "soundCue": ""
+    }
+  ]
+}

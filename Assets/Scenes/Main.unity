@@ -602,6 +602,7 @@ MonoBehaviour:
   startDropSound: {fileID: 8300000, guid: b9a2977025b95854cb951f5ef1d4a376, type: 3}
   backgroundMusic: {fileID: 8300000, guid: c8e9103139e5e06449428d27120d61fa, type: 3}
   rainLoopSound: {fileID: 8300000, guid: 22af02e85e5074940ad40504202cb40a, type: 3}
+  fadeInDuration: 2
 --- !u!4 &316261377
 Transform:
   m_ObjectHideFlags: 0
@@ -858,7 +859,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: c8e9103139e5e06449428d27120d61fa, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 0.1
+  m_Volume: 0.05
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -986,7 +987,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 22af02e85e5074940ad40504202cb40a, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 0.7
+  m_Volume: 0.4
   m_Pitch: 1
   Loop: 1
   Mute: 0

@@ -44,6 +44,7 @@ public class WolfHunter2D : MonoBehaviour
         pursuitPortal = null;
         currentPath.Clear();
         currentPathIndex = 0;
+        hasPathToTarget = false;
         nextPathRefreshTime = 0f;
     }
 
@@ -93,6 +94,7 @@ public class WolfHunter2D : MonoBehaviour
         {
             currentPath.Clear();
             currentPathIndex = 0;
+            hasPathToTarget = false;
             return false;
         }
         pursuitTarget = pursuitPortal.WolfApproachPosition;
@@ -102,8 +104,9 @@ public class WolfHunter2D : MonoBehaviour
     /// <summary>출입구에 도착하면 플레이어와 동일한 좌표로 이동하고 다음 방의 경로를 새로 찾습니다.</summary>
     private bool TryTravelThroughPortal()
     {
+        bool reachedPortalPathEnd = hasPathToTarget && currentPathIndex >= currentPath.Count;
         if (pursuitPortal == null || pursuitPortal.SourceRoom != currentRoom
-            || !pursuitPortal.ContainsWolf(wolfCollider))
+            || (!reachedPortalPathEnd && !pursuitPortal.CanWolfEnter(wolfCollider, pathCellSize * 0.5f)))
             return false;
 
         Vector2 destination = pursuitPortal.DestinationPosition; // 플레이어와 공유하는 도착 좌표입니다.
@@ -129,6 +132,7 @@ public class WolfHunter2D : MonoBehaviour
     private bool isLeavingSpawnWall = true; // 벽 안에서 스폰된 늑대가 먼저 벽 밖으로 빠져나오도록 허용하는 값입니다.
     private readonly List<Vector2> currentPath = new List<Vector2>(); // A* 탐색으로 계산한 현재 이동 경로입니다.
     private int currentPathIndex; // 현재 늑대가 향하고 있는 경로 지점 번호입니다.
+    private bool hasPathToTarget; // 현재 경로가 목표의 가장 가까운 안전 격자까지 완성되었는지 나타냅니다.
     private float nextPathRefreshTime; // 다음 경로 재계산이 가능한 물리 시간입니다.
     private int wallLayerMask; // Wall 레이어만 포함하는 물리 검사 비트 마스크입니다.
 
@@ -193,6 +197,7 @@ public class WolfHunter2D : MonoBehaviour
             lastPlayerRoom = playerRoom;
             pursuitPortal = null;
             currentPath.Clear();
+            hasPathToTarget = false;
             nextPathRefreshTime = 0f;
         }
 
@@ -230,6 +235,7 @@ public class WolfHunter2D : MonoBehaviour
     {
         currentPath.Clear();
         currentPathIndex = 0;
+        hasPathToTarget = false;
         Vector2Int startGrid = FindNearestWalkableGrid(WorldToGrid(wolfBody.position)); // 늑대와 가장 가까운 이동 가능 격자입니다.
         Vector2Int goalGrid = FindNearestWalkableGrid(WorldToGrid(pursuitTarget)); // 플레이어 또는 출입구와 가장 가까운 이동 가능 격자입니다.
         List<PathNode> openNodes = new List<PathNode>(); // 아직 검사할 후보 노드 목록입니다.
@@ -251,7 +257,11 @@ public class WolfHunter2D : MonoBehaviour
         {
             PathNode currentNode = RemoveLowestCostNode(openNodes);
 
-            if (currentNode.GridPosition == goalGrid)
+            bool reachedGoal = pursuitPortal != null
+                ? pursuitPortal.IsWolfApproachPosition(GridToWorld(currentNode.GridPosition), pathCellSize)
+                : currentNode.GridPosition == goalGrid;
+
+            if (reachedGoal)
             {
                 goalNode = currentNode;
                 break;
@@ -292,7 +302,7 @@ public class WolfHunter2D : MonoBehaviour
         if (goalNode != null)
         {
             StorePath(goalNode);
-            if (pursuitPortal != null) currentPath.Add(pursuitTarget); // 격자 중심 뒤에 정확한 출입구 접근 좌표를 추가합니다.
+            hasPathToTarget = true;
         }
     }
 

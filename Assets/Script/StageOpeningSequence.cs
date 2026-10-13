@@ -20,6 +20,10 @@ public class StageOpeningSequence : MonoBehaviour
     [SerializeField] private float normalStartY = 4.5f; // 오프닝 신호 없이 Stage에 들어왔을 때 Player가 시작할 Y 좌표입니다.
     [SerializeField, Min(0.01f)] private float openingMoveSpeed = 2f; // 오프닝에서 Player가 자동으로 위로 이동하는 초당 거리입니다.
 
+    [Header("상황 설명 대화")]
+    [SerializeField] private JsonTutorialDialogue morningDialogue; // 새 게임의 첫 아침에 표시할 조작 및 맵 설명입니다.
+    [SerializeField] private JsonTutorialDialogue nightDialogue; // 새 게임의 첫 밤에 표시할 대처 방법 설명입니다.
+
     private Color blackOriginalColor; // 검은 이미지의 원래 RGB 색상과 최대 투명도를 보관하는 값입니다.
     private bool shouldPlayOpening; // 이번 Stage 진입에서 플레이어 등장 연출을 실행할지 나타내는 값입니다.
     private Collider2D[] playerColliders; // 오프닝 동안 벽 충돌을 무시하도록 잠시 끌 Player의 모든 2D Collider입니다.
@@ -71,6 +75,12 @@ public class StageOpeningSequence : MonoBehaviour
     /// </summary>
     private IEnumerator Start()
     {
+        JsonTutorialDialogue currentDialogue = GetCurrentDialogue(); // 현재 시간에 맞춰 재생할 아침 또는 밤 설명입니다.
+        if (currentDialogue != null)
+        {
+            currentDialogue.ReserveIfNeeded();
+        }
+
         yield return FadeBlackOut();
 
         if (shouldPlayOpening)
@@ -79,7 +89,27 @@ public class StageOpeningSequence : MonoBehaviour
             RestorePlayerCollisions();
         }
 
+        if (currentDialogue != null)
+        {
+            yield return currentDialogue.PlayIfNeeded();
+        }
+
         playerMovement.SetPlayerInputEnabled(true);
+    }
+
+    /// <summary>
+    /// 현재 게임 시간이 아침이면 아침 대화, 밤이면 첫 밤 대화를 반환합니다.
+    /// </summary>
+    private JsonTutorialDialogue GetCurrentDialogue()
+    {
+        if (GameTimeManager.Instance == null)
+        {
+            return null;
+        }
+
+        return GameTimeManager.Instance.CurrentTime == GameTimeManager.TimePeriod.Morning
+            ? morningDialogue
+            : nightDialogue;
     }
 
     /// <summary>
