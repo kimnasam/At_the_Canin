@@ -1,4 +1,4 @@
-Library: D:\At_the_Canin\Temp\BurstOutput\Data\Plugins\x86_64\lib_burst_generated
+Library: D:\20607 kimnasam\At_the_Canin\Temp\BurstOutput\Data\Plugins\x86_64\lib_burst_generated
 --platform=Windows
 --backend=burst-llvm-18
 --target=X64_SSE2
@@ -9,10 +9,10 @@ Library: D:\At_the_Canin\Temp\BurstOutput\Data\Plugins\x86_64\lib_burst_generate
 --target-framework=NetFramework
 --linker-options=PdbAltPath="At the Cabin_Data/Plugins/x86_64/lib_burst_generated.pdb"
 --generate-link-xml=Temp\burst.link.xml
---temp-folder=D:\At_the_Canin\Temp\Burst
---key-folder=D:/2022.3.62f3/Editor/Data/PlaybackEngines/WindowsStandaloneSupport
---decode-folder=D:\At_the_Canin\Library\Burst
---output=D:\At_the_Canin\Temp\BurstOutput\Data\Plugins\x86_64\lib_burst_generated
+--temp-folder=D:\20607 kimnasam\At_the_Canin\Temp\Burst
+--key-folder=C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/PlaybackEngines/WindowsStandaloneSupport
+--decode-folder=D:\20607 kimnasam\At_the_Canin\Library\Burst
+--output=D:\20607 kimnasam\At_the_Canin\Temp\BurstOutput\Data\Plugins\x86_64\lib_burst_generated
 --pdb-search-paths=Temp/ManagedSymbols/
 
 --method=Unity.Burst.BurstCompiler+BurstCompilerHelper, Unity.Burst, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::IsBurstEnabled()--8c2be93e18276203cbd918daa2748a10
@@ -56,10 +56,10 @@ Library: D:\At_the_Canin\Temp\BurstOutput\Data\Plugins\x86_64\lib_burst_generate
 --target-framework=NetFramework
 --linker-options=PdbAltPath="At the Cabin_Data/Plugins/x86_64/lib_burst_generated.pdb"
 --generate-link-xml=Temp\burst.link.xml
---temp-folder=D:\At_the_Canin\Temp\Burst
---key-folder=D:/2022.3.62f3/Editor/Data/PlaybackEngines/WindowsStandaloneSupport
---decode-folder=D:\At_the_Canin\Library\Burst
---output=D:\At_the_Canin\Temp\BurstOutput\Data\Plugins\x86_64\lib_burst_generated
+--temp-folder=D:\20607 kimnasam\At_the_Canin\Temp\Burst
+--key-folder=C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/PlaybackEngines/WindowsStandaloneSupport
+--decode-folder=D:\20607 kimnasam\At_the_Canin\Library\Burst
+--output=D:\20607 kimnasam\At_the_Canin\Temp\BurstOutput\Data\Plugins\x86_64\lib_burst_generated
 --pdb-search-paths=Temp/ManagedSymbols/
 
 --method=Unity.Burst.BurstCompiler+BurstCompilerHelper, Unity.Burst, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::IsBurstEnabled()--8c2be93e18276203cbd918daa2748a10

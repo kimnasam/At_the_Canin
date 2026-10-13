@@ -7,6 +7,8 @@ public class StageWolfSpawner : MonoBehaviour
 {
     [SerializeField] private GameObject wolfPrefab; // 플레이어를 추격할 늑대 Prefab입니다.
 
+    [SerializeField] private string wolfSpawnRoom = "복도"; // 체크인한 늑대가 처음 생성되는 방 이름입니다.
+
     private readonly Vector3 wolfSpawnPosition = new Vector3(-7.5f, 4.5f, 0f); // 늑대가 나타날 고정 월드 좌표입니다.
     private bool hasSpawnedWolf; // 같은 스포너가 늑대를 두 번 생성하지 않도록 기록하는 값입니다.
 
@@ -63,7 +65,10 @@ public class StageWolfSpawner : MonoBehaviour
             return;
         }
 
-        Instantiate(wolfPrefab, wolfSpawnPosition, Quaternion.identity);
+        GameObject spawnedWolf = Instantiate(wolfPrefab, wolfSpawnPosition, Quaternion.identity); // 체크인 조건으로 생성한 늑대입니다.
+        WolfHunter2D hunter = spawnedWolf.GetComponent<WolfHunter2D>(); // 현재 방과 추격 경로를 관리하는 컴포넌트입니다.
+        if (hunter != null) hunter.SetCurrentRoom(wolfSpawnRoom);
+        else Debug.LogError("Wolf Prefab에 WolfHunter2D가 필요합니다.", spawnedWolf);
         hasSpawnedWolf = true;
         Debug.Log($"늑대를 {wolfSpawnPosition} 위치에 생성했습니다.", this);
     }

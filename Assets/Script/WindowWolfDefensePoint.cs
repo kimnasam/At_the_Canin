@@ -24,6 +24,9 @@ public class WindowWolfDefensePoint : MonoBehaviour
     [Header("늑대 생성 위치")]
     [SerializeField] private Transform wolfSpawnPoint; // 방어 실패 시 늑대를 생성할 창문 안쪽 위치입니다.
 
+    [SerializeField] private string wolfSpawnRoom = "복도"; // 이 창문에서 침입한 늑대가 생성되는 방 이름입니다.
+    public string WolfSpawnRoom => wolfSpawnRoom; // 방어 관리자가 생성한 늑대에게 전달할 시작 방입니다.
+
     private SpriteRenderer windowRenderer; // 일반 창문과 늑대 창문 이미지를 교체할 렌더러입니다.
     private float wolfAppearedTime; // 현재 늑대 이미지가 나타난 게임 시간입니다.
     private bool playerInside; // 플레이어가 이 창문의 Trigger 안에 있는지 나타냅니다.

@@ -10,6 +10,52 @@ using UnityEngine.Playables;
 [RequireComponent(typeof(AudioSource))]
 public class PlayerGridMovement : MonoBehaviour
 {
+    [Header("현재 방")]
+    [SerializeField] private string currentRoom = "복도"; // 시작 시 플레이어가 있는 방 이름입니다.
+    public string CurrentRoom => currentRoom; // 외부에서 읽을 수 있는 현재 방 이름입니다.
+    public event System.Action<string> RoomChanged; // 방이 변경될 때 구독자에게 알립니다.
+    private int teleportFrame = -1; // 순간이동한 프레임의 일반 이동 입력을 막습니다.
+
+    /// <summary>현재 방 이름을 설정하고 변경 이벤트를 전달합니다.</summary>
+    public void SetCurrentRoom(string roomName)
+    {
+        if (string.IsNullOrWhiteSpace(roomName))
+        {
+            Debug.LogWarning("방 이름은 비워 둘 수 없습니다.", this);
+            return;
+        }
+        string normalizedRoom = roomName.Trim(); // 앞뒤 공백을 제거한 방 이름입니다.
+        if (currentRoom == normalizedRoom) return;
+        currentRoom = normalizedRoom;
+        RoomChanged?.Invoke(currentRoom);
+    }
+
+    /// <summary>격자 이동을 중단하고 같은 씬의 지정 좌표와 방으로 순간이동합니다.</summary>
+    public bool TryTeleport(Vector2 destination, string roomName)
+    {
+        if (!isActiveAndEnabled || !acceptsPlayerInput || Time.timeScale <= 0f
+            || teleportFrame == Time.frameCount || string.IsNullOrWhiteSpace(roomName))
+            return false;
+
+        StopAllCoroutines();
+        isMoving = false;
+        activeInputDirection = Vector2.zero;
+        teleportFrame = Time.frameCount;
+        Vector3 destinationPosition = new Vector3(destination.x, destination.y, transform.position.z); // 기존 Z를 유지하는 도착 좌표입니다.
+        Rigidbody2D playerBody = GetComponent<Rigidbody2D>(); // 물리 위치도 함께 변경할 플레이어 본체입니다.
+        if (playerBody != null)
+        {
+            playerBody.velocity = Vector2.zero;
+            playerBody.angularVelocity = 0f;
+            playerBody.position = destination;
+        }
+        transform.position = destinationPosition;
+        Physics2D.SyncTransforms();
+        StopWalkingSound();
+        PlayIdleAnimation();
+        SetCurrentRoom(roomName);
+        return true;
+    }
     private enum FacingDirection // 플레이어가 현재 바라보는 네 방향을 구분하는 열거형입니다.
     {
         Down,
@@ -104,7 +150,7 @@ public class PlayerGridMovement : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        if (!acceptsPlayerInput)
+        if (!acceptsPlayerInput || teleportFrame == Time.frameCount)
         {
             return;
         }

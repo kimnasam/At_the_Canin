@@ -199,7 +199,10 @@ public class NightWindowDefenseController : MonoBehaviour
         }
 
         PlayEffectSound(glassBreakSound);
-        Instantiate(wolfPrefab, sourceWindow.WolfSpawnPosition, Quaternion.identity);
+        GameObject spawnedWolf = Instantiate(wolfPrefab, sourceWindow.WolfSpawnPosition, Quaternion.identity); // 침입한 창문의 위치에 생성한 늑대입니다.
+        WolfHunter2D hunter = spawnedWolf.GetComponent<WolfHunter2D>(); // 늑대의 방별 추격을 담당하는 컴포넌트입니다.
+        if (hunter != null) hunter.SetCurrentRoom(sourceWindow.WolfSpawnRoom);
+        else Debug.LogError("Wolf Prefab에 WolfHunter2D가 필요합니다.", spawnedWolf);
         wolfHasEntered = true;
         ClearAllWindows();
         activeWindow = null;
