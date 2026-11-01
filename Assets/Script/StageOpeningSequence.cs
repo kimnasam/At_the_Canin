@@ -1,4 +1,5 @@
 using System.Collections;
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -6,6 +7,16 @@ using UnityEngine;
 /// </summary>
 public class StageOpeningSequence : MonoBehaviour
 {
+    [Serializable]
+    private sealed class SceneEntryPoint // 출발 씬과 그 씬에서 돌아왔을 때 사용할 Stage 시작 지점을 연결하는 설정입니다.
+    {
+        [SerializeField] private string sourceSceneName; // Stage로 이동하기 직전에 있던 씬 이름입니다.
+        [SerializeField] private Transform entryPoint; // 해당 씬에서 들어왔을 때 플레이어를 배치할 위치입니다.
+
+        public string SourceSceneName => sourceSceneName; // 시작 지점 검색에 사용할 출발 씬 이름입니다.
+        public Transform EntryPoint => entryPoint; // 플레이어에게 적용할 위치와 회전값을 가진 Transform입니다.
+    }
+
     private static bool openingRequested; // Start 씬에서 Stage 오프닝을 요청했는지 씬 전환 중에 보관하는 값입니다.
 
     [Header("검은 화면")]
@@ -20,9 +31,15 @@ public class StageOpeningSequence : MonoBehaviour
     [SerializeField] private float normalStartY = 4.5f; // 오프닝 신호 없이 Stage에 들어왔을 때 Player가 시작할 Y 좌표입니다.
     [SerializeField, Min(0.01f)] private float openingMoveSpeed = 2f; // 오프닝에서 Player가 자동으로 위로 이동하는 초당 거리입니다.
 
+    [Header("이전 씬별 시작 위치")]
+    [SerializeField] private SceneEntryPoint[] sceneEntryPoints = Array.Empty<SceneEntryPoint>(); // 출발 씬 이름에 따라 선택할 Stage 내부 시작 지점 목록입니다.
+
     [Header("상황 설명 대화")]
     [SerializeField] private JsonTutorialDialogue morningDialogue; // 새 게임의 첫 아침에 표시할 조작 및 맵 설명입니다.
     [SerializeField] private JsonTutorialDialogue nightDialogue; // 새 게임의 첫 밤에 표시할 대처 방법 설명입니다.
+
+    [Header("방 확인 퀘스트")]
+    [SerializeField] private RoomInspectionQuest roomInspectionQuest; // 오프닝과 아침 설명이 끝난 뒤 시작할 방 확인 퀘스트입니다.
 
     private Color blackOriginalColor; // 검은 이미지의 원래 RGB 색상과 최대 투명도를 보관하는 값입니다.
     private bool shouldPlayOpening; // 이번 Stage 진입에서 플레이어 등장 연출을 실행할지 나타내는 값입니다.
@@ -35,6 +52,14 @@ public class StageOpeningSequence : MonoBehaviour
     public static void RequestOpening()
     {
         openingRequested = true;
+    }
+
+    /// <summary>
+    /// 게임 초기화 시 아직 실행되지 않은 Stage 오프닝 요청을 제거합니다.
+    /// </summary>
+    public static void ResetOpeningRequest()
+    {
+        openingRequested = false;
     }
 
     /// <summary>
@@ -62,12 +87,6 @@ public class StageOpeningSequence : MonoBehaviour
             startPosition.y = openingStartY;
             playerTransform.position = startPosition;
         }
-        else
-        {
-            Vector3 normalPosition = playerTransform.position; // 기존 X와 Z 좌표를 유지할 일반 입장 좌표입니다.
-            normalPosition.y = normalStartY;
-            playerTransform.position = normalPosition;
-        }
     }
 
     /// <summary>
@@ -75,6 +94,11 @@ public class StageOpeningSequence : MonoBehaviour
     /// </summary>
     private IEnumerator Start()
     {
+        if (!shouldPlayOpening)
+        {
+            PlacePlayerAtSceneEntryPoint();
+        }
+
         JsonTutorialDialogue currentDialogue = GetCurrentDialogue(); // 현재 시간에 맞춰 재생할 아침 또는 밤 설명입니다.
         if (currentDialogue != null)
         {
@@ -94,7 +118,45 @@ public class StageOpeningSequence : MonoBehaviour
             yield return currentDialogue.PlayIfNeeded();
         }
 
+        if (GameTimeManager.Instance != null && roomInspectionQuest != null)
+        {
+            if (GameTimeManager.Instance.CurrentTime == GameTimeManager.TimePeriod.Morning)
+            {
+                roomInspectionQuest.BeginQuest();
+            }
+            else
+            {
+                roomInspectionQuest.BeginNightQuest();
+            }
+        }
+
         playerMovement.SetPlayerInputEnabled(true);
+    }
+
+    /// <summary>직전 씬과 일치하는 시작 지점을 찾아 플레이어 위치를 적용하고, 없으면 기존 기본 위치를 사용합니다.</summary>
+    private void PlacePlayerAtSceneEntryPoint()
+    {
+        string previousSceneName = GameTimeManager.ConsumePreviousSceneName(); // 씬 전환 직전에 별도로 보관한 직전 씬 이름입니다.
+
+        foreach (SceneEntryPoint sceneEntryPoint in sceneEntryPoints)
+        {
+            if (sceneEntryPoint == null || sceneEntryPoint.EntryPoint == null)
+            {
+                continue;
+            }
+
+            if (string.Equals(sceneEntryPoint.SourceSceneName?.Trim(), previousSceneName, StringComparison.Ordinal))
+            {
+                playerTransform.SetPositionAndRotation(sceneEntryPoint.EntryPoint.position, sceneEntryPoint.EntryPoint.rotation);
+                Debug.Log($"'{previousSceneName}' 씬 시작 위치 '{sceneEntryPoint.EntryPoint.name}'를 적용했습니다.", this);
+                return;
+            }
+        }
+
+        Vector3 normalPosition = playerTransform.position; // 일치하는 설정이 없을 때 기존 X와 Z를 유지할 기본 좌표입니다.
+        normalPosition.y = normalStartY;
+        playerTransform.position = normalPosition;
+        Debug.LogWarning($"'{previousSceneName}' 씬에 해당하는 시작 위치가 없어 기본 위치를 적용했습니다.", this);
     }
 
     /// <summary>

@@ -19,4 +19,12 @@ public static class GameplayDialogueLock
             lockCount--;
         }
     }
+
+    /// <summary>
+    /// 메인 씬으로 돌아갈 때 남아 있는 모든 대화 잠금을 해제합니다.
+    /// </summary>
+    public static void Reset()
+    {
+        lockCount = 0;
+    }
 }

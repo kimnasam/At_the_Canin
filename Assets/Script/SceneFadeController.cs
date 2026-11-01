@@ -29,6 +29,7 @@ public class SceneFadeController : MonoBehaviour
             yield return null;
         }
 
+        GameTimeManager.RecordCurrentSceneAsPrevious();
         SceneManager.LoadScene(sceneName);
     }
 

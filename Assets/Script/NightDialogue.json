@@ -1,17 +1,17 @@
 {
   "lines": [
     {
-      "text": "아까 당국에서 창문을 확인 하라고 했지?",
+      "text": "아까 당국에서 창문을 확인하라고 했지?",
       "voice": "Player",
       "soundCue": ""
     },
     {
-      "text": "그래 실루엣이 보이면 창문에다 후레쉬를 비추면 되겠지...",
+      "text": "그래, 실루엣이 보이면 창문에다 플래시를 비추면 되겠지...",
       "voice": "Player",
       "soundCue": ""
     },
     {
-      "text": "(Space bar로 후레쉬를 터트리기)",
+      "text": "(스페이스바로 플래시 터뜨리기)",
       "voice": "Player",
       "soundCue": ""
     }

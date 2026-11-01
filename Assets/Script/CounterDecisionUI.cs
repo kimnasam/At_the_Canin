@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,7 +11,7 @@ public class CounterDecisionUI : MonoBehaviour
     [SerializeField] private GameObject buttonGroup; // 두 선택 버튼을 함께 켜고 끄는 부모 오브젝트입니다.
     [SerializeField] private Button checkInButton; // 방문객을 들여보내는 버튼입니다.
     [SerializeField] private Button sendAwayButton; // 방문객을 내보내는 버튼입니다.
-    [SerializeField] private Text capacityText; // 현재 체크인 인원을 표시하는 Legacy UI Text입니다.
+    [SerializeField] private TMP_Text capacityText; // 현재 체크인 인원을 표시하는 TextMesh Pro 텍스트입니다.
 
     public void Initialize(Action onCheckIn, Action onSendAway)
     {

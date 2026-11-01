@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,7 +11,7 @@ public class NightWindowDefenseController : MonoBehaviour
 {
     [Header("이벤트 시간")]
     [SerializeField, Min(1f)] private float defenseDuration = 120f; // 창문을 지켜야 하는 전체 시간(초)입니다.
-    [SerializeField] private Text timerText; // 화면 오른쪽 위에 남은 시간을 표시할 레거시 UI Text입니다.
+    [SerializeField] private TMP_Text timerText; // 화면 오른쪽 위에 남은 시간을 표시할 TextMesh Pro 텍스트입니다.
 
     [Header("창문 공격")]
     [SerializeField] private WindowWolfDefensePoint[] windows; // 늑대가 나타날 수 있는 모든 창문입니다.
@@ -20,6 +21,8 @@ public class NightWindowDefenseController : MonoBehaviour
     [SerializeField] private GameObject wolfPrefab; // 방어에 실패했을 때 실내에 생성할 추격 늑대 Prefab입니다.
 
     [Header("효과음")]
+    [SerializeField] private AudioClip windowMonsterSound; // 괴물이 창문에 나타나 있는 동안 반복 재생할 효과음입니다.
+    [SerializeField, Range(0f, 1f)] private float windowMonsterSoundVolume = 1f; // 창문 괴물 반복 효과음의 음량입니다.
     [SerializeField] private AudioClip glassBreakSound; // 늑대가 창문을 깨고 실내에 생성될 때 재생할 소리입니다.
     [SerializeField] private AudioClip flashlightSound; // 플레이어가 창문에 플래시를 비출 때 재생할 소리입니다.
 
@@ -34,6 +37,7 @@ public class NightWindowDefenseController : MonoBehaviour
     private bool wolfHasEntered; // 방어 실패로 추격 늑대가 이미 생성되었는지 나타냅니다.
     private bool isEnding; // 종료 코루틴이 중복 실행되지 않도록 막는 값입니다.
     private AudioSource effectAudioSource; // 유리 파손음과 플래시 효과음을 재생할 오디오 소스입니다.
+    private AudioSource windowMonsterAudioSource; // 창문에 괴물이 보이는 동안 효과음을 반복 재생할 전용 오디오 소스입니다.
 
     public bool CanUseFlashlight => eventRunning && !isEnding && !wolfHasEntered; // 창문에서 손전등 상호작용을 표시해도 되는 상태입니다.
 
@@ -46,6 +50,12 @@ public class NightWindowDefenseController : MonoBehaviour
         }
 
         effectAudioSource.playOnAwake = false;
+
+        windowMonsterAudioSource = gameObject.AddComponent<AudioSource>();
+        windowMonsterAudioSource.playOnAwake = false;
+        windowMonsterAudioSource.loop = true;
+        windowMonsterAudioSource.spatialBlend = 0f;
+        windowMonsterAudioSource.volume = windowMonsterSoundVolume;
     }
 
     /// <summary>
@@ -150,6 +160,7 @@ public class NightWindowDefenseController : MonoBehaviour
         {
             activeWindow.SetWolfVisible(false);
             activeWindow = null;
+            StopWindowMonsterSound();
             ScheduleNextAttack();
             return;
         }
@@ -180,6 +191,7 @@ public class NightWindowDefenseController : MonoBehaviour
 
             activeWindow = candidate;
             activeWindow.SetWolfVisible(true);
+            StartWindowMonsterSound();
             return;
         }
     }
@@ -227,6 +239,44 @@ public class NightWindowDefenseController : MonoBehaviour
     }
 
     /// <summary>
+    /// 방어 관리자가 비활성화되면 남아 있을 수 있는 괴물 반복음을 정지합니다.
+    /// </summary>
+    private void OnDisable()
+    {
+        StopWindowMonsterSound();
+    }
+
+    /// <summary>
+    /// 창문에 괴물이 나타난 동안 지정한 효과음을 반복 재생합니다.
+    /// </summary>
+    private void StartWindowMonsterSound()
+    {
+        if (windowMonsterAudioSource == null || windowMonsterSound == null)
+        {
+            return;
+        }
+
+        windowMonsterAudioSource.clip = windowMonsterSound;
+        windowMonsterAudioSource.volume = windowMonsterSoundVolume;
+
+        if (!windowMonsterAudioSource.isPlaying)
+        {
+            windowMonsterAudioSource.Play();
+        }
+    }
+
+    /// <summary>
+    /// 창문에서 괴물이 사라지면 반복 효과음을 즉시 정지합니다.
+    /// </summary>
+    private void StopWindowMonsterSound()
+    {
+        if (windowMonsterAudioSource != null && windowMonsterAudioSource.isPlaying)
+        {
+            windowMonsterAudioSource.Stop();
+        }
+    }
+
+    /// <summary>
     /// 남은 초를 분:초 형식으로 변환해 타이머 UI에 표시합니다.
     /// </summary>
     private void UpdateTimerText()
@@ -254,6 +304,8 @@ public class NightWindowDefenseController : MonoBehaviour
     /// </summary>
     private void ClearAllWindows()
     {
+        StopWindowMonsterSound();
+
         if (windows == null)
         {
             return;
@@ -287,7 +339,7 @@ public class NightWindowDefenseController : MonoBehaviour
 
         if (!valid)
         {
-            Debug.LogError("NightWindowDefenseController의 Timer Text, Windows, Wolf Prefab, Fade Controller를 모두 연결해 주세요.", this);
+            Debug.LogError("NightWindowDefenseController의 Timer TMP Text, Windows, Wolf Prefab, Fade Controller를 모두 연결해 주세요.", this);
         }
 
         return valid;

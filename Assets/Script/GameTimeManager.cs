@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 씬이 바뀌어도 현재 시간과 카운터 결과를 유지하는 전역 게임 상태입니다.
@@ -7,6 +9,8 @@ using UnityEngine;
 public class GameTimeManager : MonoBehaviour
 {
     private static bool newGameRequested; // GameTimeManager가 만들어지기 전에 새 게임이 요청되었는지 보관합니다.
+    private static string pendingPreviousSceneName = string.Empty; // 관리자 인스턴스가 없는 씬에서도 다음 Stage 진입까지 보관할 출발 씬 이름입니다.
+    private readonly HashSet<string> inspectedRoomNames = new HashSet<string>(); // 씬이 바뀌어도 유지할 방 확인 미션의 방문 완료 방 이름입니다.
 
     public enum TimePeriod // 스테이지에서 사용하는 시간 구분입니다.
     {
@@ -28,6 +32,7 @@ public class GameTimeManager : MonoBehaviour
     public bool MorningDialoguePlayed { get; private set; } // 이번 새 게임에서 아침 설명을 이미 완료했는지 나타냅니다.
     public bool CounterDialoguePlayed { get; private set; } // 이번 새 게임에서 카운터 설명을 이미 완료했는지 나타냅니다.
     public bool NightDialoguePlayed { get; private set; } // 이번 새 게임에서 첫 밤 설명을 이미 완료했는지 나타냅니다.
+    public string PreviousSceneName { get; private set; } = string.Empty; // 현재 씬으로 이동하기 직전에 플레이하던 씬 이름입니다.
 
     private void Awake()
     {
@@ -47,12 +52,22 @@ public class GameTimeManager : MonoBehaviour
         }
 
         DontDestroyOnLoad(gameObject);
+        SceneManager.activeSceneChanged += HandleActiveSceneChanged;
 
         if (newGameRequested)
         {
             ResetDialogueProgress();
             BeginMorning();
             newGameRequested = false;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
+            Instance = null;
         }
     }
 
@@ -100,6 +115,44 @@ public class GameTimeManager : MonoBehaviour
         SetTime(TimePeriod.Night);
     }
 
+    /// <summary>방 확인 미션에서 처음 방문한 방을 씬 전환 후에도 유지되는 목록에 저장합니다.</summary>
+    public void RegisterInspectedRoom(string roomName)
+    {
+        if (!string.IsNullOrWhiteSpace(roomName))
+        {
+            inspectedRoomNames.Add(roomName.Trim());
+        }
+    }
+
+    /// <summary>지정한 방이 현재 새 게임에서 이미 확인된 방인지 반환합니다.</summary>
+    public bool IsRoomInspected(string roomName)
+    {
+        return !string.IsNullOrWhiteSpace(roomName) && inspectedRoomNames.Contains(roomName.Trim());
+    }
+
+    /// <summary>씬을 불러오기 직전에 현재 씬 이름을 저장하여 다음 씬의 시작 위치 결정에 사용합니다.</summary>
+    public static void RecordCurrentSceneAsPrevious()
+    {
+        Scene currentScene = SceneManager.GetActiveScene(); // 아직 전환되지 않은 현재 활성 씬입니다.
+        pendingPreviousSceneName = currentScene.IsValid() ? currentScene.name : string.Empty;
+
+        if (Instance != null)
+        {
+            Instance.PreviousSceneName = pendingPreviousSceneName;
+        }
+    }
+
+    /// <summary>다음 Stage 진입용으로 기록한 출발 씬 이름을 반환하고 대기값을 비웁니다.</summary>
+    public static string ConsumePreviousSceneName()
+    {
+        string sceneName = !string.IsNullOrWhiteSpace(pendingPreviousSceneName)
+            ? pendingPreviousSceneName
+            : Instance != null ? Instance.PreviousSceneName : string.Empty; // 직접 기록값을 우선하고 이벤트 기록은 예비값으로 사용합니다.
+
+        pendingPreviousSceneName = string.Empty;
+        return sceneName;
+    }
+
     /// <summary>
     /// 완료된 상황의 설명 대화를 이번 새 게임에서 다시 실행하지 않도록 기록합니다.
     /// </summary>
@@ -127,6 +180,15 @@ public class GameTimeManager : MonoBehaviour
         MorningDialoguePlayed = false;
         CounterDialoguePlayed = false;
         NightDialoguePlayed = false;
+        inspectedRoomNames.Clear();
+        PreviousSceneName = string.Empty;
+        pendingPreviousSceneName = string.Empty;
+    }
+
+    /// <summary>활성 씬이 바뀔 때 떠난 씬 이름을 다음 씬의 시작 위치 선택용으로 저장합니다.</summary>
+    private void HandleActiveSceneChanged(Scene previousScene, Scene currentScene)
+    {
+        PreviousSceneName = previousScene.IsValid() ? previousScene.name : string.Empty;
     }
 
     private void SetTime(TimePeriod newTime)

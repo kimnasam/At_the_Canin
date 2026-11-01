@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 /// JSON 대사를 한 글자씩 표시하고 스페이스 또는 마우스 클릭으로 진행하는 공통 설명 대화입니다.
@@ -48,9 +48,9 @@ public sealed class JsonTutorialDialogue : MonoBehaviour
     [SerializeField] private DialogueMoment dialogueMoment; // 아침, 카운터, 첫 밤 중 이 대화의 실행 시점입니다.
     [SerializeField] private TextAsset dialogueJson; // lines 배열이 들어 있는 상황별 JSON 파일입니다.
 
-    [Header("기존 대화 UI")]
+    [Header("대화 UI")]
     [SerializeField] private GameObject dialogueWindow; // 기존 대화창 이미지와 Text를 포함하는 최상위 오브젝트입니다.
-    [SerializeField] private Text dialogueText; // 문장을 표시할 Legacy UI Text입니다.
+    [SerializeField] private TMP_Text dialogueText; // 문장을 표시할 TextMesh Pro 텍스트입니다.
 
     [Header("글자 출력")]
     [SerializeField, Min(0.01f)] private float secondsPerCharacter = 0.05f; // 글자 하나를 추가한 뒤 기다리는 시간입니다.
@@ -167,7 +167,9 @@ public sealed class JsonTutorialDialogue : MonoBehaviour
             char character = fullText[index]; // 이번 반복에서 화면에 추가할 한 글자입니다.
             dialogueText.text += character;
 
-            if (!char.IsWhiteSpace(character))
+            // 스킵으로 남은 글자를 한 프레임에 채울 때는 모든 PlayOneShot이 겹쳐
+            // 음량이 폭증하므로 정상 타이핑 중인 글자에만 목소리를 재생합니다.
+            if (!printCurrentLineImmediately && !char.IsWhiteSpace(character))
             {
                 PlayCurrentCharacterSound();
             }

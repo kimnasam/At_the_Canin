@@ -24,6 +24,9 @@ public class TriggerSceneTransition2D : MonoBehaviour
     [SerializeField, Min(0.01f)] private float fadeInDuration = 1f; // 검은 화면의 불투명도가 0에서 1이 되는 시간입니다.
     [SerializeField] private string nextSceneName; // 페이드가 끝난 뒤 불러올 씬 이름입니다.
 
+    [Header("카운터 입장 조건")]
+    [SerializeField] private RoomInspectionQuest roomInspectionQuest; // 연결하면 모든 방 확인이 끝난 뒤에만 이 출입구를 사용할 수 있습니다.
+
     private Color interactionGuideColor; // 안내 이미지의 원래 RGB와 불투명도를 보관합니다.
     private Color blackScreenColor; // 검은 화면의 원래 RGB와 불투명도를 보관합니다.
     private bool isPlayerInside; // 플레이어가 현재 Trigger 범위 안에 있는지 나타냅니다.
@@ -62,6 +65,11 @@ public class TriggerSceneTransition2D : MonoBehaviour
         {
             Debug.LogError("카운터 출입구를 사용하려면 씬에 GameTimeManager가 필요합니다.", this);
         }
+
+        if (roomInspectionQuest != null)
+        {
+            roomInspectionQuest.CompletionChanged += HandleQuestCompletionChanged;
+        }
     }
 
     private void OnDestroy()
@@ -69,6 +77,11 @@ public class TriggerSceneTransition2D : MonoBehaviour
         if (GameTimeManager.Instance != null)
         {
             GameTimeManager.Instance.TimeChanged -= HandleTimeChanged;
+        }
+
+        if (roomInspectionQuest != null)
+        {
+            roomInspectionQuest.CompletionChanged -= HandleQuestCompletionChanged;
         }
     }
 
@@ -125,6 +138,7 @@ public class TriggerSceneTransition2D : MonoBehaviour
         }
 
         SetRendererAlpha(blackScreen, blackScreenColor, 1f);
+        GameTimeManager.RecordCurrentSceneAsPrevious();
         SceneManager.LoadScene(nextSceneName);
     }
 
@@ -152,13 +166,23 @@ public class TriggerSceneTransition2D : MonoBehaviour
         }
     }
 
+    /// <summary>마지막 방을 확인했을 때 플레이어가 출입구 안에 있다면 E 안내를 즉시 표시합니다.</summary>
+    private void HandleQuestCompletionChanged(bool isCompleted)
+    {
+        if (!isChangingScene)
+        {
+            StartGuideFade(isPlayerInside && IsInteractionAvailable() ? 1f : 0f);
+        }
+    }
+
     /// <summary>
     /// 현재 시간이 아침일 때만 카운터 상호작용을 허용합니다.
     /// </summary>
     private bool IsInteractionAvailable()
     {
         return GameTimeManager.Instance != null
-            && GameTimeManager.Instance.CurrentTime == GameTimeManager.TimePeriod.Morning;
+            && GameTimeManager.Instance.CurrentTime == GameTimeManager.TimePeriod.Morning
+            && (roomInspectionQuest == null || roomInspectionQuest.IsCompleted);
     }
 
     /// <summary>
