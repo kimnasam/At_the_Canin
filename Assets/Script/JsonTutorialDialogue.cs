@@ -27,6 +27,7 @@ public sealed class JsonTutorialDialogue : MonoBehaviour
         public string text; // 화면에 출력할 한 문장입니다.
         public string voice; // 이 문장을 말하는 사람의 목소리 연결 이름입니다.
         public string soundCue; // 문장 시작 시 재생할 선택적인 사운드 신호 이름입니다.
+        public string videoCue; // 이 대사 대신 재생할 선택적인 영상 신호 이름입니다.
     }
 
     [Serializable]
@@ -62,6 +63,9 @@ public sealed class JsonTutorialDialogue : MonoBehaviour
     [SerializeField] private AudioSource cueAudioSource; // 재난 경보음 같은 문장 효과음을 출력할 별도 AudioSource입니다.
     [SerializeField] private SoundCue[] soundCues; // JSON 신호 이름과 실제 AudioClip의 연결 목록입니다.
     [SerializeField] private bool stopCueWhenDialogueEnds = true; // 전체 대화 종료 시 현재 문장 효과음을 정지할지 결정합니다.
+
+    [Header("문장 영상 큐")]
+    [SerializeField] private JsonVideoCuePlayer videoCuePlayer; // JSON 영상 신호와 연결된 MP4를 화면에 재생하는 코드입니다.
 
     private bool lockHeld; // 이 컴포넌트가 공통 게임 진행 잠금을 보유하는지 나타냅니다.
     private bool isPlaying; // 중복 대화 실행을 막는 값입니다.
@@ -129,6 +133,25 @@ public sealed class JsonTutorialDialogue : MonoBehaviour
 
         foreach (DialogueLine line in file.lines)
         {
+            if (line != null && !string.IsNullOrWhiteSpace(line.videoCue))
+            {
+                dialogueWindow.SetActive(false);
+                StopCurrentSoundCue();
+
+                if (videoCuePlayer != null)
+                {
+                    yield return videoCuePlayer.Play(line.videoCue);
+                }
+                else
+                {
+                    Debug.LogWarning($"영상 신호 '{line.videoCue}'가 있지만 Video Cue Player가 연결되지 않았습니다.", this);
+                }
+
+                dialogueWindow.SetActive(true);
+                dialogueText.text = string.Empty;
+                continue;
+            }
+
             string fullText = line != null && line.text != null ? line.text : string.Empty; // null도 안전하게 표시할 실제 문장입니다.
             SelectVoice(line != null ? line.voice : string.Empty);
             PlaySoundCue(line != null ? line.soundCue : string.Empty);
@@ -142,7 +165,7 @@ public sealed class JsonTutorialDialogue : MonoBehaviour
 
         if (stopCueWhenDialogueEnds && cueAudioSource != null)
         {
-            cueAudioSource.Stop();
+            StopCurrentSoundCue();
         }
 
         isPlaying = false;
@@ -274,6 +297,17 @@ public sealed class JsonTutorialDialogue : MonoBehaviour
         }
 
         Debug.LogWarning($"JSON의 사운드 신호 '{cueName}'에 연결된 AudioClip이 없습니다.", this);
+    }
+
+    /// <summary>
+    /// 현재 반복 중인 문장 효과음을 영상 또는 대화 종료 전에 정지합니다.
+    /// </summary>
+    private void StopCurrentSoundCue()
+    {
+        if (cueAudioSource != null)
+        {
+            cueAudioSource.Stop();
+        }
     }
 
     private bool ShouldPlay()

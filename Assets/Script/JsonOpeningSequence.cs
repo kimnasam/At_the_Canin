@@ -88,6 +88,7 @@ public sealed class JsonOpeningSequence : MonoBehaviour
     private string currentImageName = string.Empty; // 현재 사진 칸에 표시 중인 JSON 사진 이름입니다.
     private AudioClip currentCharacterSound; // 현재 화자에게 선택된 글자 목소리입니다.
     private bool printImmediately; // 입력으로 현재 문장의 남은 글자를 즉시 출력할지 나타냅니다.
+    private bool skipCurrentPhotoTransition; // Space 입력으로 현재 사진의 페이드 아웃과 페이드 인을 모두 생략할지 나타냅니다.
     private bool isPlaying; // 오프닝이 중복 실행되는 것을 막는 값입니다.
 
     private void Awake()
@@ -179,11 +180,23 @@ public sealed class JsonOpeningSequence : MonoBehaviour
             yield break;
         }
 
+        skipCurrentPhotoTransition = false;
         yield return FadePhotoBlackOverlay(photoBlackOverlay.color.a, 1f);
         photoImage.sprite = nextSprite;
         photoImage.enabled = true;
         currentImageName = imageName;
-        yield return FadePhotoBlackOverlay(1f, 0f);
+
+        if (skipCurrentPhotoTransition)
+        {
+            SetPhotoBlackAlpha(0f);
+        }
+        else
+        {
+            yield return FadePhotoBlackOverlay(1f, 0f);
+        }
+
+        // 사진 전환을 생략한 Space 입력이 같은 프레임의 대사 출력까지 넘기지 않도록 분리합니다.
+        yield return null;
     }
 
     private Sprite FindImage(string imageName)
@@ -215,6 +228,13 @@ public sealed class JsonOpeningSequence : MonoBehaviour
 
         while (elapsedTime < imageFadeDuration)
         {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                skipCurrentPhotoTransition = true;
+                SetPhotoBlackAlpha(endAlpha);
+                yield break;
+            }
+
             elapsedTime += Time.unscaledDeltaTime;
             float progress = Mathf.Clamp01(elapsedTime / imageFadeDuration); // 현재 사진 전환 진행 비율입니다.
             SetPhotoBlackAlpha(Mathf.Lerp(startAlpha, endAlpha, progress));

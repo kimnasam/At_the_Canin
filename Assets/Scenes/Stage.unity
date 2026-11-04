@@ -2088,6 +2088,7 @@ MonoBehaviour:
   cueAudioSource: {fileID: 0}
   soundCues: []
   stopCueWhenDialogueEnds: 1
+  videoCuePlayer: {fileID: 0}
 --- !u!1001 &343420860
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3564,7 +3565,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dc7677759f874640b39401d18be2a55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentTime: 1
+  currentTime: 0
   maximumGuests: 6
 --- !u!4 &549584789
 Transform:
@@ -12209,6 +12210,7 @@ MonoBehaviour:
   cueAudioSource: {fileID: 0}
   soundCues: []
   stopCueWhenDialogueEnds: 1
+  videoCuePlayer: {fileID: 0}
 --- !u!4 &1701608309 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1275627144493421121, guid: 31fbad431ae287a4b87e94fd80889b39, type: 3}
